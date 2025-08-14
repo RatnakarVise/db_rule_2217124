@@ -17,9 +17,9 @@ REPLACEMENTS = {
     "RVKRED05": "This is obsolete",
     "VKMI": "This is obsolete",
     "VAKCR": "This is obsolete",
-    "VKM2": "UKM_CASE (OSS Note 2270544)",
-    "VKM3": "UKM_CASE (OSS Note 2270544)",
-    "VKM5": "UKM_CASE (OSS Note 2270544)",
+    "VKM2": "This Tcode is replaces by UKM_CASE (OSS Note 2270544)",
+    "VKM3": "This Tcode is replaces byUKM_CASE (OSS Note 2270544)",
+    "VKM5": "This Tcode is replaces by UKM_CASE (OSS Note 2270544)",
     "CL_CRED_VAL_LOG": "This is obsolete",
 }
 
