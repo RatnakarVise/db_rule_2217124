@@ -8,8 +8,8 @@ app = FastAPI(title="S4HANA Credit Management Object Remediator")
 
 # Mapping of obsolete objects to their replacements (if available)
 REPLACEMENTS = {
-    "S066": "This table is replaced by UKM_ITEM (item level credit data, per SAP Note 2706489)",
-    "S067": "This table is replaced byUKM_ITEM (item level credit data, per SAP Note 2706489)",
+    "S066": "UKM_ITEM (item level credit data, per SAP Note 2706489)",
+    "S067": "UKM_ITEM (item level credit data, per SAP Note 2706489)",
     "SD_VKMLOG_SHOW": "This is obsolete",
     "VAKCR_REBUILD": "This is obsolete",
     "RVKRED03": "This is obsolete",
@@ -17,9 +17,9 @@ REPLACEMENTS = {
     "RVKRED05": "This is obsolete",
     "VKMI": "This is obsolete",
     "VAKCR": "This is obsolete",
-    "VKM2": "This Tcode is replaces by UKM_CASE (OSS Note 2270544)",
-    "VKM3": "This Tcode is replaces byUKM_CASE (OSS Note 2270544)",
-    "VKM5": "This Tcode is replaces by UKM_CASE (OSS Note 2270544)",
+    "VKM2": "UKM_CASE (OSS Note 2270544)",
+    "VKM3": "UKM_CASE (OSS Note 2270544)",
+    "VKM5": "UKM_CASE (OSS Note 2270544)",
     "CL_CRED_VAL_LOG": "This is obsolete",
 }
 
