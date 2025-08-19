@@ -47,8 +47,21 @@ CLASS_RE = re.compile(
     re.IGNORECASE,
 )
 
+# NEW: CLEAR statements like "CLEAR S066." or "CLEAR S067-variable."
+CLEAR_RE = re.compile(
+    rf"(?P<full>(?P<stmt>\bCLEAR\b)\s+(?P<obj>{'|'.join(TABLES)})\b[\w\-]*)",
+    re.IGNORECASE,
+)
+
+# NEW: "=" assignments involving table names (either side of '=')
+ASSIGN_RE = re.compile(
+    rf"(?P<full>(?P<obj>{'|'.join(TABLES)})[\w\-]*\s*=\s*[\w\-\>]+|[\w\-\>]+\s*=\s*(?P<obj2>{'|'.join(TABLES)})[\w\-]*)",
+    re.IGNORECASE,
+)
+
 # All patterns to search
-FINDERS = [TABLE_RE, TXN_RE, PROG_RE, CLASS_RE]
+FINDERS = [TABLE_RE, TXN_RE, PROG_RE, CLASS_RE, CLEAR_RE, ASSIGN_RE]
+
 
 class Unit(BaseModel):
     pgm_name: str
@@ -60,19 +73,22 @@ class Unit(BaseModel):
     end_line: Optional[int] = None
     code: Optional[str] = ""
 
+
 def find_obsolete_usage(txt: str):
     matches = []
     for pat in FINDERS:
         for m in pat.finditer(txt or ""):
+            obj = m.groupdict().get("obj") or m.groupdict().get("obj2")
             matches.append({
                 "full": m.group("full"),
-                "stmt": m.group("stmt"),
-                "object": m.group("obj"),
-                "suggested_statement": REPLACEMENTS.get(m.group("obj").upper()),
+                "stmt": m.groupdict().get("stmt") or "=",
+                "object": obj,
+                "suggested_statement": REPLACEMENTS.get(obj.upper()) if obj else None,
                 "span": m.span("full"),
             })
     matches.sort(key=lambda x: x["span"][0])
     return matches
+
 
 @app.post("/remediate-credit-objects")
 def remediate_credit_objects(units: List[Unit]):
@@ -83,7 +99,7 @@ def remediate_credit_objects(units: List[Unit]):
         for m in find_obsolete_usage(src):
             metadata.append({
                 "table": None,
-                "target_type": None,
+                "target_type": "TABLE" if m["object"] in TABLES else None,
                 "target_name": m["object"],
                 "start_char_in_unit": m["span"][0],
                 "end_char_in_unit": m["span"][1],
@@ -93,6 +109,6 @@ def remediate_credit_objects(units: List[Unit]):
                 "suggested_fields": None,
             })
         obj = json.loads(u.model_dump_json())
-        obj["mb_txn_usage"] = metadata  # keep same key for output compatibility
+        obj["mb_txn_usage"] = metadata
         results.append(obj)
     return results
