@@ -31,31 +31,32 @@ CLASSES = ["CL_CRED_VAL_LOG"]
 
 # Context-aware regex patterns
 TABLE_RE = re.compile(
-    rf"(?P<full>(?P<stmt>\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bMODIFY\b)[\s\S]*?\b(FROM|INTO|UPDATE|DELETE\s+FROM)\b\s+(?P<obj>{'|'.join(TABLES)})\b)",
+    rf"(?P<full>(?P<stmt>\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bMODIFY\b)[\s\S]*?\b(FROM|INTO|UPDATE|DELETE\s+FROM)\b\s+(?P<obj>{'|'.join(TABLES)})\b[\s\S]*?\.)",
     re.IGNORECASE,
 )
+
 TXN_RE = re.compile(
-    rf"(?P<full>(?P<stmt>\bCALL\s+TRANSACTION\b)\s+['\"]?(?P<obj>{'|'.join(TRANSACTIONS)})['\"]?)",
+    rf"(?P<full>(?P<stmt>\bCALL\s+TRANSACTION\b)\s+['\"]?(?P<obj>{'|'.join(TRANSACTIONS)})['\"]?\s*.)",
     re.IGNORECASE,
 )
+
 PROG_RE = re.compile(
-    rf"(?P<full>(?P<stmt>\bSUBMIT\b)\s+(?P<obj>{'|'.join(PROGRAMS)})\b)",
+    rf"(?P<full>(?P<stmt>\bSUBMIT\b)\s+(?P<obj>{'|'.join(PROGRAMS)})\b[\s\S]*?\.)",
     re.IGNORECASE,
 )
+
 CLASS_RE = re.compile(
-    rf"(?P<full>(?P<stmt>\bCREATE\s+OBJECT\b|\bNEW\b|\bTYPE\s+REF\s+TO\b)[\s\S]*?\b(?P<obj>{'|'.join(CLASSES)})\b)",
+    rf"(?P<full>(?P<stmt>\bCREATE\s+OBJECT\b|\bNEW\b|\bTYPE\s+REF\s+TO\b)[\s\S]*?\b(?P<obj>{'|'.join(CLASSES)})\b[\s\S]*?\.)",
     re.IGNORECASE,
 )
 
-# NEW: CLEAR statements like "CLEAR S066." or "CLEAR S067-variable."
 CLEAR_RE = re.compile(
-    rf"(?P<full>(?P<stmt>\bCLEAR\b)\s+(?P<obj>{'|'.join(TABLES)})\b[\w\-]*)",
+    rf"(?P<full>(?P<stmt>\bCLEAR\b)\s+(?P<obj>{'|'.join(TABLES)})[\w\-]*\s*\.)",
     re.IGNORECASE,
 )
 
-# NEW: "=" assignments involving table names (either side of '=')
 ASSIGN_RE = re.compile(
-    rf"(?P<full>(?P<obj>{'|'.join(TABLES)})[\w\-]*\s*=\s*[\w\-\>]+|[\w\-\>]+\s*=\s*(?P<obj2>{'|'.join(TABLES)})[\w\-]*)",
+    rf"(?P<full>((?P<obj>{'|'.join(TABLES)})[\w\-]*\s*=\s*[\w\-\>]+|[\w\-\>]+\s*=\s*(?P<obj2>{'|'.join(TABLES)})[\w\-]*)\s*\.)",
     re.IGNORECASE,
 )
 
@@ -90,6 +91,7 @@ def find_obsolete_usage(txt: str):
                 "object": obj,
                 "suggested_statement": REPLACEMENTS.get(obj.upper()) if obj else None,
                 "span": m.span("full"),
+                "snippet": m.group("full").strip()
             })
     matches.sort(key=lambda x: x["span"][0])
     return matches
@@ -113,7 +115,8 @@ def remediate_credit_objects(units: List[Unit]):
                 "ambiguous": m["suggested_statement"] is None,
                 "suggested_statement": m["suggested_statement"],
                 "suggested_fields": None,
-                "snippet": snippet_at(src, start, end)
+                # "snippet": snippet_at(src, start, end)
+                "snippet": m["snippet"],
                 # "note": "Replace obsolete MB transactio
             })
         obj = json.loads(u.model_dump_json())
